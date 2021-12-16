@@ -22,7 +22,7 @@
 
 
 #include <stdint.h>
-
+#include <Wire.h>
 
 // Version of this CCS811 driver
 #define CCS811_VERSION                     12 // Also in library.properties and revision history in .h/.cpp
@@ -67,7 +67,7 @@
 class CCS811 {
   public: // Main interface
     CCS811(int nwake=-1, int slaveaddr=CCS811_SLAVEADDR_0);                   // Pin number connected to nWAKE (nWAKE can also be bound to GND, then pass -1), slave address (5A or 5B)
-    bool begin( void );                                                       // Reset the CCS811, switch to app mode and check HW_ID. Returns false on problems.
+    bool begin(TwoWire *theWire = &Wire);                                     // Setting Wire instance to be used. Reset the CCS811, switch to app mode and check HW_ID. Returns false on problems.
     bool start( int mode );                                                   // Switch CCS811 to `mode`, use constants CCS811_MODE_XXX. Returns false on I2C problems.
     void read( uint16_t*eco2, uint16_t*etvoc, uint16_t*errstat,uint16_t*raw); // Get measurement results from the CCS811 (all args may be NULL), check status via errstat, e.g. ccs811_errstat(errstat)
     const char * errstat_str(uint16_t errstat);                               // Returns a string version of an errstat. Note, each call, this string is updated.
@@ -97,6 +97,7 @@ class CCS811 {
     int  _slaveaddr;                                                          // I2C slave address of the CCS811.
     int  _i2cdelay_us;                                                        // Delay in us just before an I2C repeated start condition.
     int  _appversion;                                                         // Version of the app firmware inside the CCS811 (for workarounds).
+    TwoWire *_wire;                                                           // Pointer to used Wire instance
 };
 
 

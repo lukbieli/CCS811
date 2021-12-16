@@ -74,7 +74,7 @@ CCS811::CCS811(int nwake, int slaveaddr) {
 
 
 // Reset the CCS811, switch to app mode and check HW_ID. Returns false on problems.
-bool CCS811::begin( void ) {
+bool CCS811::begin( TwoWire *theWire ) {
   uint8_t sw_reset[]= {0x11,0xE5,0x72,0x8A};
   uint8_t app_start[]= {};
   uint8_t hw_id;
@@ -82,6 +82,8 @@ bool CCS811::begin( void ) {
   uint8_t app_version[2];
   uint8_t status;
   bool ok;
+  
+  _wire = theWire;
 
   // Wakeup CCS811
   wake_up();
@@ -567,21 +569,21 @@ void CCS811::wake_down( void) {
 
 // Writes `count` from `buf` to register at address `regaddr` in the CCS811. Returns false on I2C problems.
 bool CCS811::i2cwrite(int regaddr, int count, const uint8_t * buf) {
-  Wire.beginTransmission(_slaveaddr);              // START, SLAVEADDR
-  Wire.write(regaddr);                             // Register address
-  for( int i=0; i<count; i++) Wire.write(buf[i]);  // Write bytes
-  int r= Wire.endTransmission(true);               // STOP
+  _wire->beginTransmission(_slaveaddr);              // START, SLAVEADDR
+  _wire->write(regaddr);                             // Register address
+  for( int i=0; i<count; i++) _wire->write(buf[i]);  // Write bytes
+  int r= _wire->endTransmission(true);               // STOP
   return r==0;
 }
 
 // Reads 'count` bytes from register at address `regaddr`, and stores them in `buf`. Returns false on I2C problems.
 bool CCS811::i2cread(int regaddr, int count, uint8_t * buf) {
-  Wire.beginTransmission(_slaveaddr);              // START, SLAVEADDR
-  Wire.write(regaddr);                             // Register address
-  int wres= Wire.endTransmission(false);           // Repeated START
+  _wire->beginTransmission(_slaveaddr);              // START, SLAVEADDR
+  _wire->write(regaddr);                             // Register address
+  int wres= _wire->endTransmission(false);           // Repeated START
   delayMicroseconds(_i2cdelay_us);                 // Wait
-  int rres=Wire.requestFrom(_slaveaddr,count);     // From CCS811, read bytes, STOP
-  for( int i=0; i<count; i++ ) buf[i]=Wire.read();
+  int rres=_wire->requestFrom(_slaveaddr,count);     // From CCS811, read bytes, STOP
+  for( int i=0; i<count; i++ ) buf[i]=_wire->read();
   return (wres==0) && (rres==count);
 }
 
